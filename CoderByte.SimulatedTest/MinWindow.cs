@@ -1,111 +1,85 @@
 ﻿namespace CoderByte.SimulatedTest
 {
-    //classe auxiliar para manter o estado da janela deslizante
-    internal sealed class MinWindowAux
-    {
-        public int Left;
-        public int Right;
-        public int RequiredChars;
-        public int MinLength;
-        public int StartIndex;
-        public Dictionary<char, int> PatternCount;
-        public MinWindowAux(int requiredChars, Dictionary<char, int> patternCount)
-        {
-            Left = 0;
-            Right = 0;
-            RequiredChars = requiredChars;
-            MinLength = int.MaxValue;
-            StartIndex = 0;
-            PatternCount = patternCount;
-        }
-    }
-
+    
     //classe principal para encontrar a menor substring que contém todos os caracteres do padrão
     internal static class MinWindow
     {
-        //metodo principal que implementa a lógica da janela deslizante
         public static string MinWindowSubstring(string str, string pattern)
         {
-            // verifica casos de borda
             if (string.IsNullOrEmpty(str) || string.IsNullOrEmpty(pattern) || pattern.Length > str.Length)
                 return string.Empty;
 
-            // constrói o dicionário de contagem de caracteres do padrão
-            var patternCount = BuildPatternCount(pattern);
-            // inicializa o estado da janela deslizante
-            var state = new MinWindowAux(pattern.Length, patternCount);
+            var need = BuildNeed(pattern);
 
-            // enquanto a janela direita não ultrapassar o final da string
-            while (state.Right < str.Length)
+            int missing = pattern.Length;
+            int startPos = 0;
+            int bestLen = int.MaxValue;
+            int left = 0;
+
+            // para cada caractere à direita, tenta expandir a janela para cobrir o padrão.
+            for (int right = 0; right < str.Length; right++)
             {
-                char rightChar = str[state.Right];
-                //se o caractere da direita estiver no dicionário de contagem do padrão, atualiza a contagem e o número de caracteres necessários
-                if (state.PatternCount.ContainsKey(rightChar))
+                char rightChar = str[right];
+
+                // Se rightChar faz parte do padrão, consome esse "need".
+                if (need.ContainsKey(rightChar))
                 {
-                    if (state.PatternCount[rightChar] > 0)
-                    {
-                        // se o caractere ainda é necessário, decrementa o número de caracteres necessários
-                        state.RequiredChars--;
-                    }
-                    // decrementa a contagem do caractere no dicionário
-                    state.PatternCount[rightChar]--;
+                    // Se rightChar ainda é necessário, decrementa missing.
+                    if (need[rightChar] > 0)
+                    { missing--; }
+                    // Decrementa a contagem de rightChar em "need".
+                    need[rightChar] --;
                 }
 
-                // enquanto a janela atual contém todos os caracteres necessários, tenta reduzir a janela pela esquerda
-                while (state.RequiredChars == 0)
+                // Quando missing == 0, a janela atual cobre o padrão.
+                while (missing == 0)
                 {
-                    // atualiza a melhor janela encontrada até agora
-                    UpdateBestWindow(state);
-
-                    char leftChar = str[state.Left];
-                    if(state.PatternCount.ContainsKey(leftChar))
+                    int len = right - left + 1;
+                    if (len < bestLen)
                     {
-                        // se o caractere da esquerda estiver no dicionário, incrementa a contagem do caractere
-                        state.PatternCount[leftChar]++;
-                        // se a contagem do caractere for maior que zero, significa que ele é necessário novamente, então incrementa o número de caracteres necessários
-                        if (state.PatternCount[leftChar] > 0)
-                            state.RequiredChars++;
+                        bestLen = len;
+                        startPos = left;
                     }
 
-                    // move a janela pela esquerda para tentar encontrar uma janela menor
-                    state.Left++;
-                }
+                    char leftChar = str[left];
 
-                // move a janela pela direita para expandir a janela
-                state.Right++;
+                    // Tenta encolher pela esquerda: devolve lc para o "need".
+                    if(need.ContainsKey(leftChar))
+                    {
+                        // Se leftChar é parte do padrão, incrementa sua contagem em "need".
+                        need[leftChar]++;
+
+                        if(need[leftChar] > 0)
+                        {
+                            // Se leftChar agora é necessário novamente, incrementa missing.
+                            missing++;
+                        }
+                    }
+
+                    // Move left para tentar encontrar uma janela menor.
+                    left++;
+                }
             }
 
-            // se a menor janela encontrada for maior que a string original, significa que não foi encontrada uma janela válida, então retorna string vazia
-            return state.MinLength > str.Length
+            return bestLen == int.MaxValue
                 ? string.Empty
-                : str.Substring(state.StartIndex, state.MinLength);
+                : str.Substring(startPos, bestLen);
         }
 
-        //metodo auxiliar para construir o dicionário de contagem de caracteres do padrão
-        private static Dictionary<char, int> BuildPatternCount(string pattern)
+        // Constrói o dicionário que conta quantas vezes cada caractere do padrão é necessário.
+        private static Dictionary<char, int> BuildNeed(string pattern)
         {
-            var patternCount = new Dictionary<char, int>();
-
-            foreach (char character in pattern)
+            var need = new Dictionary<char, int>();
+            foreach (char c in pattern)
             {
-                if (patternCount.TryGetValue(character, out int count))
-                    patternCount[character] = count + 1;
+                if (need.ContainsKey(c))
+                {
+                    need[c]++;
+                }
                 else
-                    patternCount[character] = 1;
+                    need.Add(c, 1);
             }
-
-            return patternCount;
-        }
-
-        //metodo auxiliar para atualizar a melhor janela encontrada
-        private static void UpdateBestWindow(MinWindowAux state)
-        {
-            int currentLength = state.Right - state.Left + 1;
-            if (currentLength < state.MinLength)
-            {
-                state.MinLength = currentLength;
-                state.StartIndex = state.Left;
-            }
+            return need;
         }
     }
 }
