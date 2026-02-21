@@ -99,5 +99,7 @@ Console.WriteLine(QuestionMarks.QuestionsMarks("arrb6???4xxbl5???eee5"));
 
 Console.WriteLine(BacketMatcher.IsMatch("(hello (world))"));
 
+Console.WriteLine(MinWindow.MinWindowSubstring("aaabacaddae", "cda"));
+
 Console.WriteLine("### end ###");
 Console.ReadLine();
