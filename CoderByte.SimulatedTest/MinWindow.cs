@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace CoderByte.SimulatedTest
+﻿namespace CoderByte.SimulatedTest
 {
     //classe auxiliar para manter o estado da janela deslizante
     internal sealed class MinWindowAux
