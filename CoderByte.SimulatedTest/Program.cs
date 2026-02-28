@@ -102,5 +102,8 @@ Console.WriteLine(BacketMatcher.IsMatch("(hello (world))"));
 string pattern = "ade";
 Console.WriteLine(MinWindow.MinWindowSubstring("aaabacaddae", pattern));
 
+JSonCleaning.Main().Wait();
+LogsParse.Main().Wait();
+
 Console.WriteLine("### end ###");
 Console.ReadLine();
